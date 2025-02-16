@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+import 'package:web/web.dart' as html;
 import '../value.dart';
 
 class StorageImpl {
@@ -15,7 +14,7 @@ class StorageImpl {
       ValueStorage<Map<String, dynamic>>(<String, dynamic>{});
 
   void clear() {
-    localStorage.remove(fileName);
+    localStorage.removeItem(fileName);
     subject.value.clear();
 
     subject
@@ -24,7 +23,7 @@ class StorageImpl {
   }
 
   Future<bool> _exists() async {
-    return localStorage.containsKey(fileName);
+    return localStorage.getItem(fileName) != null;
   }
 
   Future<void> flush() {
@@ -57,33 +56,22 @@ class StorageImpl {
     subject
       ..value.remove(key)
       ..changeValue(key, null);
-    //  return _writeToStorage(subject.value);
   }
 
   void write(String key, dynamic value) {
     subject
       ..value[key] = value
       ..changeValue(key, value);
-    //return _writeToStorage(subject.value);
   }
 
-  // void writeInMemory(String key, dynamic value) {
-
-  // }
-
   Future<void> _writeToStorage(Map<String, dynamic> data) async {
-    localStorage.update(fileName, (val) => json.encode(subject.value),
-        ifAbsent: () => json.encode(subject.value));
+    localStorage.setItem(fileName, json.encode(subject.value));
   }
 
   Future<void> _readFromStorage() async {
-    final dataFromLocal = localStorage.entries.firstWhereOrNull(
-      (value) {
-        return value.key == fileName;
-      },
-    );
+    final dataFromLocal = localStorage.getItem(fileName);
     if (dataFromLocal != null) {
-      subject.value = json.decode(dataFromLocal.value) as Map<String, dynamic>;
+      subject.value = json.decode(dataFromLocal) as Map<String, dynamic>;
     } else {
       await _writeToStorage(<String, dynamic>{});
     }
